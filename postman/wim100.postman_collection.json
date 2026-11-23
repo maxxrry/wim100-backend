@@ -1,0 +1,123 @@
+{
+  "info": {
+    "name": "WIM 100 Backend",
+    "description": "Las 9 pruebas del Paso 15. Ejecutar en orden sobre una base recién cargada (3 postulantes): la #4 crea el postulante con id 4. Datos ficticios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" }
+  ],
+  "item": [
+    {
+      "name": "1. Listar postulantes (200)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('3 postulantes', () => pm.expect(pm.response.json().length).to.eql(3));"
+      ] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/postulantes" }
+    },
+    {
+      "name": "2. Login correcto (200)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('trae id, nombre y rol', () => { const j = pm.response.json(); pm.expect(j).to.have.keys('id','usuario','nombre','rol'); });"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": { "mode": "raw", "raw": "{ \"usuario\": \"evaluadora1\", \"password\": \"wim2026\" }" }
+      }
+    },
+    {
+      "name": "3. Login con contraseña mala (401)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('401', () => pm.response.to.have.status(401));"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/auth/login",
+        "body": { "mode": "raw", "raw": "{ \"usuario\": \"evaluadora1\", \"password\": \"mala\" }" }
+      }
+    },
+    {
+      "name": "4. Crear postulante (201)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('201', () => pm.response.to.have.status(201));",
+        "pm.test('id asignado y estado RECIBIDA', () => { const j = pm.response.json(); pm.expect(j.id).to.be.a('number'); pm.expect(j.estado).to.eql('RECIBIDA'); });"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/postulantes",
+        "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"antonia.perez@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2299\",\n  \"area\": \"Análisis de malware\",\n  \"aniosExperiencia\": 6,\n  \"resumenExperiencia\": \"Analista forense en un equipo ficticio de respuesta a incidentes.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}" }
+      }
+    },
+    {
+      "name": "5. Repetir POST: correo duplicado (409)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('409', () => pm.response.to.have.status(409));"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/postulantes",
+        "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"antonia.perez@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2299\",\n  \"area\": \"Análisis de malware\",\n  \"aniosExperiencia\": 6,\n  \"resumenExperiencia\": \"Analista forense en un equipo ficticio de respuesta a incidentes.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}" }
+      }
+    },
+    {
+      "name": "6. Años negativos (400)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('400', () => pm.response.to.have.status(400));",
+        "pm.test('error del campo', () => pm.expect(pm.response.json().errores).to.have.property('aniosExperiencia'));"
+      ] } }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/postulantes",
+        "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"antonia.otra@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2299\",\n  \"area\": \"Análisis de malware\",\n  \"aniosExperiencia\": -1,\n  \"resumenExperiencia\": \"Analista forense en un equipo ficticio de respuesta a incidentes.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}" }
+      }
+    },
+    {
+      "name": "7. Editar postulante 4 (200)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('datos cambiados', () => pm.expect(pm.response.json().aniosExperiencia).to.eql(8));"
+      ] } }],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/postulantes/4",
+        "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"antonia.perez@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2299\",\n  \"area\": \"Seguridad en la nube\",\n  \"aniosExperiencia\": 8,\n  \"resumenExperiencia\": \"Analista forense que ahora lidera la seguridad cloud de un equipo ficticio.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}" }
+      }
+    },
+    {
+      "name": "8. Cambiar estado del 4 (200)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('200', () => pm.response.to.have.status(200));",
+        "pm.test('EN_REVISION', () => pm.expect(pm.response.json().estado).to.eql('EN_REVISION'));"
+      ] } }],
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/api/postulantes/4/estado",
+        "body": { "mode": "raw", "raw": "{ \"estado\": \"EN_REVISION\" }" }
+      }
+    },
+    {
+      "name": "9a. Eliminar postulante 4 (204)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('204', () => pm.response.to.have.status(204));"
+      ] } }],
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/api/postulantes/4" }
+    },
+    {
+      "name": "9b. GET del eliminado (404)",
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('404', () => pm.response.to.have.status(404));"
+      ] } }],
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/postulantes/4" }
+    }
+  ]
+}
